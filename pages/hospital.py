@@ -64,14 +64,31 @@ def show_hospital(df):
 
     # ── 지표 카드 ─────────────────────────────────────
     c1, c2, c3, c4 = st.columns(4)
-    surplus_pct = (allocated - my_row['predicted']) / my_row['predicted'] * 100 if my_row['predicted'] > 0 else 0
-
     for col, title, val, unit, color in [
-        (c1, "AI 권장 배정량",  f"{allocated:.0f}",         "Units",    "#1565c0"),
-        (c2, "예측 수요량",     f"{my_row['predicted']:.0f}", "Units",   "#333"),
-        (c3, "안전재고 여유",   f"+{surplus_pct:.1f}%",      "예측 대비","#2e7d32"),
-        (c4, "배정 상태",       status,                       "HITL",     s_color),
+        (c1, "AI 권장 배정량",  f"{allocated:.0f}",          "Units",    "#1565c0"),
+        (c2, "예측 수요량",     f"{my_row['predicted']:.0f}", "Units",    "#333"),
+        (c3, "안전재고 여유",   f"+{surplus_pct:.1f}%",       "예측 대비","#2e7d32"),
     ]:
+        with col:
+            st.markdown(f"""
+            <div class='metric-card'>
+                <p style='color:#888;margin:0;font-size:0.82rem;'>{title}</p>
+                <h2 style='color:{color};margin:0.3rem 0;font-size:1.6rem;'>{val}</h2>
+                <p style='color:#aaa;margin:0;font-size:0.78rem;'>{unit}</p>
+            </div>""", unsafe_allow_html=True)
+
+# 배정 상태 카드 따로 (글자 잘림 방지)
+with c4:
+    st.markdown(f"""
+    <div class='metric-card'>
+        <p style='color:#888;margin:0;font-size:0.82rem;'>배정 상태</p>
+        <h2 style='color:{s_color};margin:0.3rem 0;font-size:1.1rem;
+                   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'>
+            {status}
+        </h2>
+        <p style='color:#aaa;margin:0;font-size:0.78rem;'>Human-in-the-Loop</p>
+    </div>""", unsafe_allow_html=True)
+    
         with col:
             st.markdown(f"""
             <div class='metric-card'>
@@ -110,7 +127,7 @@ def show_hospital(df):
         ax1.spines['top'].set_visible(False)
         ax1.spines['right'].set_visible(False)
         ax1.grid(axis='y', color='#eeeeee')
-        ax1.set_title(f'{hospital} — Platelet Demand & Allocation (Last 30 Days)',
+        ax1.set_title('Platelet Demand & Allocation (Last 30 Days)',
                       fontsize=11, fontweight='bold')
 
         bw_colors = ['#f44336' if r >= 1.3 else '#90CAF9' for r in recent['bullwhip_ratio']]
@@ -142,7 +159,7 @@ def show_hospital(df):
         st.markdown("#### 🚨 긴급 혈소판 추가 요청")
         st.markdown(f"""<div class='info-box'>
         ℹ️ 배정량({allocated:.0f} Units)이 부족할 경우 긴급 요청을 제출하세요.
-        혈액원 담당자가 검토 후 승인합니다. (Human-in-the-Loop)</div>""",
+        혈액원 담당자가 검토 후 승인합니다.</div>""",
         unsafe_allow_html=True)
 
         with st.form("emergency_form"):
@@ -217,5 +234,5 @@ def show_hospital(df):
         st.markdown(f"""<div class='info-box'>
         🏦 {my_center} 오늘 공급량: <b>{supply:,} Units</b>
         | 배정: <b>{used:.0f} Units</b>
-        | 잔량: <b>{supply - used:.0f} Units</b> (버퍼)</div>""",
+        | 잔량: <b>{supply - used:.0f} Units</b></div>""",
         unsafe_allow_html=True)
